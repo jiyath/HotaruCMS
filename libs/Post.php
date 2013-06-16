@@ -18,8 +18,8 @@
  * 
  * @category  Content Management System
  * @package   HotaruCMS
- * @author    Nick Ramsay <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @author    Hotaru CMS Team
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://www.hotarucms.org/
  */
@@ -29,7 +29,9 @@ class Post
 	protected $id = 0;
 	protected $archived         = 'N';            // archived Yes or No (Y/N)
 	protected $author           = 0;            // post author
+        protected $authorname       = '';           // post authorname from user table on left join
 	protected $date             = '';           // post submission date
+        protected $updatedts        = '';           // post updated date
 	protected $pubDate          = '';           // post published date
 	protected $status           = 'unsaved';    // initial status before database entry
 	protected $type             = '';           // post type, e.g. news, blog, forum
@@ -80,17 +82,19 @@ class Post
 		if (!$post_id && !$post_row) {
 			$post_id = $this->id;   // use the id already assigned to $h->post
 		}
-		
+
 		if ($post_id != 0) {
 			$post_row = $h->getPost($post_id);
 			if (!$post_row) { $h->vars['post_error'] = true; return false; }
 		}
-		
+
 		if ($post_row && isset($post_row->post_id)) {
 			$this->id = $post_row->post_id;
 			$this->archived = $post_row->post_archived;
 			$this->author = $post_row->post_author;
+                        $this->authorname = $post_row->user_username;
 			$this->date = $post_row->post_date;
+                        $this->updatedts = $post_row->post_updatedts;
 			$this->pubDate = $post_row->post_pub_date;
 			$this->status = $post_row->post_status;
 			$this->type = urldecode($post_row->post_type);
@@ -126,7 +130,8 @@ class Post
 	{
                 if (!defined('PHP_VERSION_ID') || PHP_VERSION_ID < 50300 || !ACTIVERECORD) {
                     // Build SQL
-                    $query = "SELECT * FROM " . TABLE_POSTS . " WHERE post_id = %d ORDER BY post_date DESC";
+                    $query = "SELECT P.*, U.user_username FROM " . TABLE_POSTS . " AS P LEFT OUTER JOIN " . TABLE_USERS . " AS U ON P.post_author = U.user_id WHERE P.post_id = %d";
+                    
                     $sql = $h->db->prepare($query, $post_id);                                
 
                     // Create temp cache array
@@ -141,7 +146,9 @@ class Post
                             $post = $h->db->get_row($sql);
                             $h->vars['tempPostCache'][$sql] = $post;
                     }
-                } else {                                       
+                } else {          
+                    $post = $h->mdb->queryOneRow($query, $post_id);
+                    
                     $post = models___Posts::find_by_post_id($post_id);
                     // note we dont use models___Posts::($post_id); because it will throw an error if record not foound
                 }
@@ -471,6 +478,37 @@ class Post
 		$end = date('YmdHis', strtotime($time_ago));
 		$sql = "SELECT COUNT(post_id) FROM " . TABLE_POSTS . " WHERE post_archived = %s AND post_author = %d AND post_type = %s AND (post_date >= %s AND post_date <= %s)";
 		$count = $h->db->get_var($h->db->prepare($sql, 'N', $user_id, $post_type, $end, $start));
+		
+		return $count;
+	}
+        
+        
+        /**
+	 * Count posts in the last X hours/minutes for this user
+	 *
+	 * @param int $hours
+	 * @param int $minutes
+	 * @param int $user_id (optional)
+	 * @param int $post_type (optional)
+	 * @return int 
+	 */
+	public function countPostsFilter($h, $hours = 0, $minutes = 0, $filter = '', $filterText = '', $link = '', $post_type = 'news')
+	{		
+		if ($hours) { 
+			$time_ago = "-" . $hours . " Hours";
+		} else {
+			$time_ago = "-" . $minutes . " minutes";
+		} 
+                
+                $and = '';
+                if ($filter == 'tag') $and = ' AND post_tags = %s';
+                elseif ($filter == 'category') $and = ' AND post_category = %s';
+		else { $and = ' AND 1= %d'; $filterText = 1; }                               
+                    
+		$start = date('YmdHis', time_block());
+		$end = date('YmdHis', strtotime($time_ago));
+		$sql = "SELECT COUNT(post_id) FROM " . TABLE_POSTS . " WHERE post_archived = %s" . $and . ' AND post_type = %s AND post_status <> %s'; // . " AND (post_date >= %s AND post_date <= %s)";
+		$count = $h->db->get_var($h->db->prepare($sql, 'N', $filterText, $post_type, 'pending')); //, $end, $start));
 		
 		return $count;
 	}

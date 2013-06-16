@@ -18,8 +18,8 @@
  * 
  * @category  Content Management System
  * @package   HotaruCMS
- * @author    Nick Ramsay <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @author    Hotaru CMS Team
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://www.hotarucms.org/
  */
@@ -155,9 +155,7 @@ class PluginFunctions
                                             // otherwise add to return array...
                                             $return_array[$plugin->plugin_class . "_" . $hook] = $result; // name the result Class + hook name
                                     }
-                                } else {
-                                    // TODO
-                                    // Report that a plugin could not be loaded properly
+                                } else {                                    
                                     $h->messages['Plugin class could not be found'] = "alert-error";
                                     return false;
                                 }

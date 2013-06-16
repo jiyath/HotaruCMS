@@ -2,7 +2,7 @@
 /**
  * Theme name: admin_default
  * Template name: navigation.php
- * Template author: Nick Ramsay
+ * Template author: shibuya246
  *
  * PHP version 5
  *
@@ -20,8 +20,8 @@
  * 
  * @category  Content Management System
  * @package   HotaruCMS
- * @author    Nick Ramsay <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @author    Hotaru CMS Team
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://www.hotarucms.org/
  */
@@ -35,7 +35,7 @@
           <span class="icon-bar"></span>
           <span class="icon-bar"></span>
         </button>
-        <a class="brand" href="/"><?php echo SITE_NAME; ?></a>
+        <a class="brand" href="<?php echo SITEURL; ?>"><?php echo SITE_NAME; ?></a>
         <span class="btn-navbar">
           <?php	if ($h->currentUser->loggedIn) {
                               if($h->isActive('avatar')) {

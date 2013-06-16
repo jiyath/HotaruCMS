@@ -21,13 +21,18 @@
  * @category  Content Management System
  * @package   HotaruCMS
  * @author    Shibuya246 <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://hotarucms.org/
  */
 
 ?>
-<?php header('Content-type: text/html; charset=utf-8'); ?>
+<?php
+header('Content-type: text/html; charset=utf-8');
+//header("Cache-Control: private, max-age=6000, pre-check=6000");
+//header("Pragma: private");
+//header("Expires: " . gmdate("D, d M Y H:i:s"). " GMT");
+?>
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" dir="ltr" lang="en-US">
 <head profile="http://gmpg.org/xfn/11">

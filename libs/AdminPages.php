@@ -18,8 +18,8 @@
  * 
  * @category  Content Management System
  * @package   HotaruCMS
- * @author    Nick Ramsay <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @author    Hotaru CMS Team
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://www.hotarucms.org/
  */
@@ -59,6 +59,9 @@ class AdminPages
 				break;
 			case "blocked":
 				$h->vars['admin_blocked_list'] = $this->blocked($h);
+				break;
+                        case "pages_management":
+                                $h->vars['admin_pages_array'] = $this->getPages($h);
 				break;
 			case "plugin_management":				
 				$h->vars['admin_sidebar_layout'] = 'horizontal';
@@ -286,15 +289,15 @@ class AdminPages
 		if ($action == 'announcement') { $maintenance->addSiteAnnouncement($h); }
 		if ($action == 'open') { $h->openCloseSite('open'); }
 		if ($action == 'close') { $h->openCloseSite('close'); }
-		if ($action == 'clear_all_cache') { 
+		if ($action == 'clear_all_cache') {                         
 			$h->clearCache('db_cache', false);
 			$h->clearCache('css_js_cache', false);
 			$h->clearCache('rss_cache', false);
 			$h->clearCache('html_cache', false);
 			$h->clearCache('lang_cache', false);
 			@unlink(BASE. 'cache/smartloader_cache.php');
-			$h->message = $h->lang('admin_maintenance_clear_all_cache_success');
-			$h->messageType = 'green alert-success';
+                        $h->pluginHook('maintenance_clear_all_cache');
+			$h->messages[$h->lang('admin_maintenance_clear_all_cache_success')] = 'green';                         
 		}
 		if ($action == 'clear_db_cache') { $h->clearCache('db_cache'); }
 		if ($action == 'clear_css_js_cache') { $h->clearCache('css_js_cache'); }
@@ -306,8 +309,7 @@ class AdminPages
 		if ($action == 'empty') { $h->emptyTable($h->cage->get->testAlnumLines('table')); }
 		if ($action == 'drop') { $h->dropTable($h->cage->get->testAlnumLines('table')); }
 		if ($action == 'remove_settings') { $h->removeSettings($h->cage->get->testAlnumLines('settings')); }
-		if ($action == 'system_report') { $h->generateReport(); } 
-		if ($action == 'email_report') { $h->generateReport('email'); } 
+		if ($action == 'system_report') { $h->generateReport(); } 		
 		if ($action == 'delete_debugs') { 
 			$h->clearCache('debug_logs');
 			$h->vars['debug_files'] = $h->getFiles(CACHE . 'debug_logs');
@@ -405,6 +407,12 @@ class AdminPages
 		return $blocked_items;
 	}
 	
+        
+        public function getPages($h)
+        {
+            
+        }
+        
 	
 	/* *************************************************************
 	*
@@ -422,17 +430,30 @@ class AdminPages
 		$h->plugin->folder = $pfolder;   // assign this plugin to Hotaru
 		
 		$action = $h->cage->get->testAlnumLines('action');
-		$order = $h->cage->get->testAlnumLines('order');
+		$order = $h->cage->get->testAlnumLines('order');                
 				
 		$plugman = new PluginManagement();
 		
 		switch ($action) {
+                        case "orderAjax":
+                                $sort = $h->cage->post->testAlnumLines('sort');
+                                $plugman->pluginReorder($h, $sort);
+                                //echo 1; 
+                                die();
 			case "activate":
 				$plugman->activateDeactivate($h, 1);
 				break;
+                        case "activateAjax":
+				$result = $plugman->activateDeactivate($h, 1, true);
+                                echo json_encode($result);
+				die();    
 			case "deactivate":
 				$plugman->activateDeactivate($h, 0);
-				break;    
+				break;  
+                        case "deactivateAjax":
+				$result = $plugman->activateDeactivate($h, 0, true);
+                                echo json_encode($result);
+				die();     
 			case "activate_all":
 				$plugman->activateDeactivateAll($h, 1);
 				break;
@@ -485,7 +506,7 @@ class AdminPages
         public static function sidebarPluginsList($h, $pluginResult)
         {           
             $pFuncs = new PluginFunctions();
-            $base = $pFuncs::getValues($h, $pluginResult);
+            $base = $pFuncs->getValues($h, $pluginResult);
 
             try {
                 if (is_array($base)) {
@@ -530,6 +551,9 @@ class AdminPages
                       <?php  } ?>
                       <?php if ($h->isActive('category_manager')) { ?>
                         <li><a href="<?php echo $h->url(array('page' => 'plugin_settings', 'plugin' => 'category_manager'), 'admin'); ?>">Category Manager</a></li>
+                      <?php  } ?>
+                        <?php if ($h->isActive('widgets')) { ?>
+                        <li><a href="<?php echo $h->url(array('page' => 'plugin_settings', 'plugin' => 'widgets'), 'admin'); ?>">Widgets</a></li>
                       <?php  } ?>
                     </ul>
                   </li>

@@ -2,7 +2,7 @@
 /**
  * Theme name: admin_default
  * Template name: plugin_settings.php
- * Template author: Nick Ramsay
+ * Template author: shibuya246
  *
  * PHP version 5
  *
@@ -20,8 +20,8 @@
  * 
  * @category  Content Management System
  * @package   HotaruCMS
- * @author    Nick Ramsay <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @author    Hotaru CMS Team
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://www.hotarucms.org/
  */
@@ -36,8 +36,9 @@ $meta = $h->readPluginMeta($plugin);
 $pluginData = $h->readPlugin($plugin);
 
 
-if (version_compare($pluginData->plugin_latestversion, $pluginData->plugin_version) == 1) {     
-    $h->showMessage('There is a newer version of this plugin, version ' . $pluginData->plugin_latestversion . '. <a href="#">upgrade now</a>', 'alert-info'); 
+if (version_compare($pluginData->plugin_latestversion, $pluginData->plugin_version) == 1) { 
+    $href= SITEURL . "admin_index.php?page=plugin_management&action=update&plugin=" . strtolower($pluginData->plugin_folder) . "&version=" . $pluginData->plugin_latestversion . "#tab_updates";
+    $h->showMessage('There is a newer version of this plugin, version ' . $pluginData->plugin_latestversion . '. <a href="' . $href . '">upgrade now</a>', 'alert-info'); 
     // show version number in the message
 }
 
@@ -60,7 +61,7 @@ if ($pluginData->plugin_latestversion == '0.0') {
                         <li><a href="#home" data-toggle="tab">Overview</a></li>
                         <li><a href="#support" data-toggle="tab">Support</a></li>
                         <li><a href="#about" data-toggle="tab">About</a></li> 
-                        <li class="pull-right btn btn-info disable">' . ucfirst($plugin) . '</li>';
+                        <li class="pull-right btn btn-info disable">' . ucfirst(make_name($plugin)) . '</li>';
                   $h->pluginHook('admin_plugin_tabLabel_after_last', $plugin);
                   echo '</ul>';
 
@@ -109,10 +110,7 @@ if ($pluginData->plugin_latestversion == '0.0') {
                   
                     echo '<div class="tab-pane" id="support">';                        
                         echo 'Rating: N/A<br/><br/>';
-                        
-                        // Plugin hook for old versions of donate button
-                        //echo $h->pluginHook('admin_topright');
-                        
+                                                
                         // Plugin hook for adding content to support tab
                         echo $h->pluginHook('admin_plugin_support', $plugin);
                     

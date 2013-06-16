@@ -18,8 +18,8 @@
  * 
  * @category  Content Management System
  * @package   HotaruCMS
- * @author    Nick Ramsay <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @author    Hotaru CMS Team
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://www.hotarucms.org/
  *
@@ -34,24 +34,38 @@ class UserActivity
 	 * @param string $type blank or "count" or "query"
 	 * @return array|false
 	 */
-	public function getLatestActivity($h, $limit = 0, $userid = 0, $type = '')
+	public function getLatestActivity($h, $limitCount = 0, $userid = 0, $type = '', $fromId = 0)
 	{
-		if (!$limit) { $limit = ""; } else { $limit = "LIMIT " . $limit; }
+		$limit = (!$limitCount) ? '' : "LIMIT " . $limitCount;
 		
-		$select = ($type == 'count') ? 'count(useract_id)' : '*';
-		
+                // if we also know the post id then we should join it in and check for buried,banned
+                // also we should select on the title
+                // however since we dont know whether post_id will appear in first or second useract_key we would have to make a case statement here which is messy
+                // TODO
+                // consider reorganizing the activity table to have a activity_post column which can be easily looked up
+                
 		if (!$userid)
 		{
-			$sql = "SELECT " . $select . " FROM " . TABLE_USERACTIVITY . " WHERE useract_archived = %s AND useract_status = %s ORDER BY useract_date DESC " . $limit;
-			$query = $h->db->prepare($sql, 'N', 'show');
-			if ($type == 'query') { return $query; }
+                        $select = ($type == 'count') ? 'count(useract_id)' : 'UA.*, U.user_username';
+			//$sql = "SELECT " . $select . " FROM " . TABLE_USERACTIVITY . " AS UA LEFT OUTER JOIN " . TABLE_USERS . " AS U ON UA.useract_userid = U.user_id WHERE UA.useract_archived = %s AND UA.useract_status = %s AND UA.useract_id > %d AND P.post_status <> %s AND P.post_status <> %s ORDER BY UA.useract_date DESC " . $limit;
+			//$query = $h->db->prepare($sql, 'N', 'show', $fromId, 'pending', 'buried');
+                        
+                        $sql = "SELECT " . $select . " FROM " . TABLE_USERACTIVITY . " AS UA LEFT OUTER JOIN " . TABLE_USERS . " AS U ON UA.useract_userid = U.user_id WHERE UA.useract_archived = %s AND UA.useract_status = %s AND UA.useract_id > %d ORDER BY UA.useract_date DESC " . $limit;
+                        $query = $h->db->prepare($sql, 'N', 'show', $fromId);
+			
+                        if ($type == 'query') { return $query; }
 			$result = ($type == 'count') ? $h->db->get_var($query) : $h->db->get_results($query);
 		} 
 		else
 		{
-			$sql = "SELECT " . $select . " FROM " . TABLE_USERACTIVITY . " WHERE useract_archived = %s AND useract_status = %s AND useract_userid = %d ORDER BY useract_date DESC " . $limit;
-			$query = $h->db->prepare($sql, 'N', 'show', $userid);
-			if ($type == 'query') { return $query; }
+                        $select = ($type == 'count') ? 'count(useract_id)' : '*';
+			//$sql = "SELECT " . $select . " FROM " . TABLE_USERACTIVITY . " WHERE useract_archived = %s AND useract_status = %s AND useract_userid = %d AND useract_id > %d AND P.post_status <> %s AND P.post_status <> %s ORDER BY useract_date DESC " . $limit;
+			//$query = $h->db->prepare($sql, 'N', 'show', $userid, $fromId, 'pending', 'buried');
+			
+                        $sql = "SELECT " . $select . " FROM " . TABLE_USERACTIVITY . " WHERE useract_archived = %s AND useract_status = %s AND useract_userid = %d AND useract_id > %d ORDER BY useract_date DESC " . $limit;
+                        $query = $h->db->prepare($sql, 'N', 'show', $userid, $fromId);
+			
+                        if ($type == 'query') { return $query; }
 			$result = ($type == 'count') ? $h->db->get_var($query) : $h->db->get_results($query);
 		}
 		

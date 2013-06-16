@@ -23,7 +23,7 @@
  * @category  Content Management System
  * @package   HotaruCMS
  * @author    shibuya246 <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://hotarucms.org/
  */
@@ -72,14 +72,14 @@ $sideBarWidth = 12 - $leftSpan;
 		</div>
 	<?php } ?>
 		
-        <br/>
+        <div id="header_end">
+            <?php if (!$h->isActive('categories')) echo '<br/>'; ?>
+                <!-- CATEGORIES, ETC --> 
+                <?php $h->pluginHook('header_end'); ?>
+        </div>
+        
 	<div class="container<?php echo $fluid; ?>">
-            <div class="row<?php echo $fluid; ?>">
-
-                <div id="header_end" class="container<?php echo $fluid; ?>">
-                        <!-- CATEGORIES, ETC -->
-                        <?php $h->pluginHook('header_end'); ?>
-                </div>
+            <div class="row<?php echo $fluid; ?>">                
 
 		<div id="content">
 			

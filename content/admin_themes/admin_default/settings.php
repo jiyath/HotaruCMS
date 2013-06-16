@@ -2,7 +2,7 @@
 /**
  * Theme name: admin_default
  * Template name: settings.php
- * Template author: Nick Ramsay
+ * Template author: shibuya246
  *
  * PHP version 5
  *
@@ -20,8 +20,8 @@
  * 
  * @category  Content Management System
  * @package   HotaruCMS
- * @author    Nick Ramsay <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @author    Hotaru CMS Team
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://www.hotarucms.org/
  */
@@ -46,7 +46,8 @@ $loaded_settings = $h->vars['admin_settings'];
 	
 	<?php     // **********************************************************
 	
-		// Loop through the settings, displaying each one as a row...    
+		// Loop through the settings, displaying each one as a row...  
+                if ($loaded_settings) { 
 		foreach ($loaded_settings as $ls)
 		{
 			if ($ls->settings_show == 'N') { continue; } // skip this row
@@ -97,7 +98,7 @@ $loaded_settings = $h->vars['admin_settings'];
 			<td><i><?php echo $ls->settings_note; ?></i></td>
 			</tr>
 	 
-	<?php	} // End loop **********************************************************     ?>
+	<?php	}} // End loop **********************************************************     ?>
 	
 	
 	<input type='hidden' name='settings_update' value='true' />

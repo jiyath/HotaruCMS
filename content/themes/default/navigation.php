@@ -24,7 +24,7 @@
  * @category  Content Management System
  * @package   HotaruCMS
  * @author    Shibuya246 <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://hotarucms.org/
  */
@@ -79,16 +79,15 @@ $h->vars['theme_settings']['userProfile_tabs'] = isset($h->vars['theme_settings'
                 </ul>
                 <ul class="nav nav-pills pull-right">
                
-                    <?php
+                    <?php                    
                     if (!$h->isActive('signin')) { 
 		
 			if ($h->currentUser->loggedIn == true) { 
 				
-                                if ($h->currentUser->getPermission('can_access_admin') == 'yes') {
+                                if ($h->currentUser->getPermission('can_access_admin') == 'yes') {                                    
+                                    if ($h->isDebug) { print $h->debugNav(); }
                                     $h->adminNav();
-                                } else {
-                                    echo "<li><a href='" . $h->url(array(), 'admin') . "'>" . $h->lang("main_theme_navigation_admin") . "</a></li>";
-                                }
+                                } 
                                 
 				//if ($h->pageName == 'logout') { $status = "class='active'"; } else { $status = ""; }
 				// Logout

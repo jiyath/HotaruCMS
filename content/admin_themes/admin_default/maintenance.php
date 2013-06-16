@@ -2,7 +2,7 @@
 /**
  * Theme name: admin_default
  * Template name: maintenance.php
- * Template author: Nick Ramsay
+ * Template author: shibuya246
  *
  * PHP version 5
  *
@@ -20,8 +20,8 @@
  * 
  * @category  Content Management System
  * @package   HotaruCMS
- * @author    Nick Ramsay <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @author    Hotaru CMS Team
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://www.hotarucms.org/
  */
@@ -29,7 +29,7 @@
 $plugin_settings = isset($h->vars['admin_plugin_settings']) ? $h->vars['admin_plugin_settings'] : '';
 $db_tables = isset($h->vars['admin_plugin_tables']) ? $h->vars['admin_plugin_tables'] : '';
 
-$h->showMessage();
+$h->showMessages();
 
 // Hook above content
 $h->pluginHook('admin_maintenance_top');

@@ -18,8 +18,8 @@
  * 
  * @category  Content Management System
  * @package   HotaruCMS
- * @author    Nick Ramsay <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @author    Hotaru CMS Team
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://www.hotarucms.org/
  */
@@ -267,14 +267,23 @@ class PageHandling
 			4. Show the 404 Not Found page from the theme
 			5. Show the 404 Not Found page from "themes" folder
 		*/
-             
+
 		if ($plugin != 'pages' && file_exists($themes . $theme . $page))
-		{
+		{ 
 			if (!$include_once) {
 				// Special case, do not restrict to include once.
-				include($themes . $theme . $page);
+                                if ((include $themes . $theme . $page) == 1) {
+                                    //
+                                } else {
+                                    echo 'ERROR : ' . $themes . $theme . $page . ' not included';
+                                    
+                                } 				
 			} else {
-				include_once($themes . $theme . $page);
+				if ((include_once $themes . $theme . $page) == 1) {
+                                    //
+                                } else {
+                                    echo 'ERROR : ' . $themes . $theme . $page . ' not included';                                    
+                                }                                
 			}
 		} 
 		elseif ($plugin != 'pages' && file_exists($themes . $default . $page)) 

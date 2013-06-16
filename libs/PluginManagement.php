@@ -18,8 +18,8 @@
  * 
  * @category  Content Management System
  * @package   HotaruCMS
- * @author    Nick Ramsay <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @author    Hotaru CMS Team
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://www.hotarucms.org/
  */
@@ -60,6 +60,7 @@ class PluginManagement
 				if ($plugin_row) 
 				{
 					// if plugin is in the database...
+                                        $allplugins[$count]['id'] = $plugin_row->plugin_id;   // need this for when we reorder the lists - use id in the sort_id col
 					$allplugins[$count]['name'] = $plugin_row->plugin_name;
 					$allplugins[$count]['description'] = $plugin_row->plugin_desc;
 					$allplugins[$count]['folder'] = $plugin_row->plugin_folder;
@@ -81,7 +82,7 @@ class PluginManagement
 				} 
 				else 
 				{
-					// if plugin is not in database...
+					// if plugin is not in database...                                        
 					$allplugins[$count]['name'] = $plugin_details['name'];
 					$allplugins[$count]['description'] = $plugin_details['description'];
 					$allplugins[$count]['folder'] = $plugin_details['folder'];
@@ -102,20 +103,10 @@ class PluginManagement
 				}
 				
 				// Conditions for "active"...
-				if (($allplugins[$count]['status'] == 'active') && ($allplugins[$count]['install'] == 'install')) {
-					$allplugins[$count]['active'] = "<div class=\"text-toggle-button\"><input type=\"checkbox\" checked=\"checked\"></div> </a>";
-				} elseif (($allplugins[$count]['status'] == 'inactive') && ($allplugins[$count]['install'] == 'install')) {
-					$allplugins[$count]['active'] = "<div class=\"text-toggle-button\"><input type=\"checkbox\"></div> </a>";
-				} elseif ($allplugins[$count]['status'] == 'active') {
-					$allplugins[$count]['active'] = "<a href='" . SITEURL;
-					$allplugins[$count]['active'] .= "admin_index.php?page=plugin_management&amp;action=deactivate&amp;plugin=";
-					$allplugins[$count]['active'] .= $allplugins[$count]['folder'] . "'>";
-					$allplugins[$count]['active'] .= "<div class=\"text-toggle-button\"><input type=\"checkbox\" checked=\"checked\"></div> </a>";
-				} else {
-					$allplugins[$count]['active'] = "<a href='" . SITEURL;
-					$allplugins[$count]['active'] .= "admin_index.php?page=plugin_management&amp;action=activate&amp;plugin=";
-					$allplugins[$count]['active'] .= $allplugins[$count]['folder'] . "'>";
-					$allplugins[$count]['active'] .= "<div class=\"text-toggle-button\"><input type=\"checkbox\"></div> </a>";
+				if ($allplugins[$count]['status'] == 'active') {					
+					$allplugins[$count]['active'] = "<div class='switch switch-small' id='switch#". $allplugins[$count]['folder'] . "'><input type=\"checkbox\" checked=\"checked\"></div> </a>";
+				} else {					
+					$allplugins[$count]['active'] = "<div class='switch switch-small' id='switch#". $allplugins[$count]['folder'] . "'><input type=\"checkbox\"></div>";
 				}
 				
 				
@@ -586,7 +577,7 @@ class PluginManagement
 	 * @param int $enabled 
 	 * Note: This function does not uninstall/delete a plugin.
 	 */
-	public function activateDeactivate($h, $enabled = 0)
+	public function activateDeactivate($h, $enabled = 0, $ajax = false)
 	{	// 0 = deactivate, 1 = activate
 		
 		// Clear the database cache to ensure plugins and hooks are up-to-date.
@@ -608,7 +599,8 @@ class PluginManagement
 		} 
 		else 
 		{
-			$this->activateDeactivateDo($h, $plugin_row, $enabled);
+			$result = $this->activateDeactivateDo($h, $plugin_row, $enabled);
+                        return $result;
 		}
 	}
 	
@@ -713,6 +705,8 @@ class PluginManagement
 		}
 		
 		$h->pluginHook('activate_deactivate', '', array('enabled' => $enabled));
+                
+                return $enabled;
 	}
 	
 	
@@ -731,7 +725,33 @@ class PluginManagement
 		if ($active_plugins) { return $active_plugins; } else {return false; }
 	}
 	
+        
+        /**
+         * 
+         */
+        public function pluginReorder($h, $sort = '')
+        {
+            if (!$sort) return false;
+
+            foreach($sort as $p => $id)
+            {
+                //print $p+1 . '=' . $id . '<br/>'; 
+                // since array starts at 0 we need to add 1 to $p to get the sort order for saving to db               
+                
+                $sql = "UPDATE " . TABLE_PLUGINS . " SET plugin_order = %d WHERE plugin_id = %d";
+                //print $h->db->prepare($sql, $p+1, $id) . '<br/>';
+                $h->db->query($h->db->prepare($sql, $p+1, $id)); 			
+            }   
+            
+            //refresh cache and sort hooks
+            $this->refreshPluginDetails($h);
+            $this->sortPluginHooks($h);
+            $h->clearCache('db_cache', false);
+                
+            return true;
+        }
 	
+        
 	/**
 	 * Updates plugin order and order of their hooks, i.e. changes the order 
 	 * of plugins in pluginHook.
@@ -843,6 +863,12 @@ class PluginManagement
 		$findfolder = str_replace('_', '-', $folder);
 		$version = str_replace('.', '-', $version);		
 		
+                // pluginmanagement so its a plugin
+                $url .= 'plugins';
+                // add pluginfoler to the url as well
+                $url .= '/' . $findfolder . '/';
+                //print $url;
+                
                 // TODO
                 // make temp folder the copy directory and unzip files here first
                 // copy old folder somewhere and then bring in new one
@@ -886,7 +912,7 @@ class PluginManagement
 
 		// unzip		
 		if (file_exists( $copydir . $file)) {
-                    //$h->messages['About to start the unzip process' . $copydir . $file] = 'alert-info';
+                    $h->messages['About to start the unzip process' . $copydir . $file] = 'alert-info';
                     
                     // check chmod
 		    if (!$write) { $this->fileFtpChmod($h, $ftp_url, $folder, '777'); }
@@ -1012,7 +1038,7 @@ class PluginManagement
                 $z = new ZipArchive();
 	        $zopen = $z->open($file, ZIPARCHIVE::CHECKCONS);                           
 
-                //if ($h->debug) $h->messages['Attempt to unzip ' . $file] = 'alert-info';
+                if ($h->debug) $h->messages['Attempt to unzip ' . $file] = 'alert-info';
                 
                 if ($zopen !== true) {
                         $h->messages['Could not open zip file ' . $file] = 'red';

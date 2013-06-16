@@ -2,7 +2,7 @@
 /**
  * Theme name: admin_default
  * Template name: plugins.php
- * Template author: Nick Ramsay
+ * Template author: shibuya246
  *
  * PHP version 5
  *
@@ -20,17 +20,16 @@
  * 
  * @category  Content Management System
  * @package   HotaruCMS
- * @author    Nick Ramsay <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @author    Hotaru CMS Team
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://www.hotarucms.org/
  */
+$h->pluginHook('plugins_top');
 
 $h->template('admin_sidebar');
 
 $h->showMessages();
-
-$h->pluginHook('plugins_top');
 
 $the_plugins = isset($h->vars['installed_plugins']) ? $h->vars['installed_plugins'] : array();
 

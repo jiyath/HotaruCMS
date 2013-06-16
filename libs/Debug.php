@@ -18,8 +18,8 @@
  * 
  * @category  Content Management System
  * @package   HotaruCMS
- * @author    Nick Ramsay <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @author    Hotaru CMS Team
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://www.hotarucms.org/
  */
@@ -39,30 +39,87 @@ class Debug
 			
 			echo "<p class='debug'>";
 			echo $h->lang('main_hotaru_db_queries') . $h->db->num_queries . " | ";
-			echo $h->lang('main_hotaru_page_load_time') . timer_stop(1) . $h->lang('main_times_secs') . " | ";
+			echo $h->lang('main_hotaru_page_load_time') . timer_stop(2) . $h->lang('main_times_secs') . " | ";
 			echo $h->lang('main_hotaru_memory_usage') . display_filesize(memory_get_usage()) . " | ";
 			echo $h->lang('main_hotaru_php_version') . phpversion() . " | ";
 			echo $h->lang('main_hotaru_mysql_version') . $mysql_version . " | ";
 			echo $h->lang('main_hotaru_hotaru_version') . $h->version; 
-                        
+                        echo ' (' . $h->vars['debug']['db_driver'] . ') ';
                         $h->pluginHook('debug_footer');
                         
 			echo "</p>"; 
-		}
-		elseif ($h->pageTemplate && function_exists('file_get_contents'))
-		{
-			$template = file_get_contents(THEMES . THEME . $h->pageTemplate . '.php');
+		} else {		
+                    if (!$h->adminPage && $h->pageTemplate && function_exists('file_get_contents'))
+                    {
+                        $filename = THEMES . THEME . $h->pageTemplate . '.php';
+                        if (file_exists($filename)) {
+                            $template = file_get_contents($filename);
 
-			$hlink1 = stripos($template,"href='http://hotarucms.org'");
-			$hlink2 = stripos($template,"href=\"http://hotarucms.org\"");
-			if (($hlink1 === FALSE) && ($hlink2 === FALSE)) {
-				// Hotaru link removed from footer so put it back in:
-				echo "<p><small><a href='http://hotarucms.org' title='HotaruCMS.org'>Powered by HotaruCMS</a></small></p>";
-			}
-		}
+                            $hlink1 = stripos($template,"href='http://hotarucms.org'");
+                            $hlink2 = stripos($template,"href=\"http://hotarucms.org\"");
+                            if (($hlink1 === FALSE) && ($hlink2 === FALSE)) {
+                                    // Hotaru link removed from footer so put it back in:
+                                    echo "<p><small><a href='http://hotarucms.org' title='HotaruCMS.org'>Powered by HotaruCMS</a></small></p>";
+                            }
+                        }
+                    }
+                }
+                if ($h->isDebug && $h->currentUser->perms['can_access_admin'] == 'yes') { echo $this->hvars($h); }
 	
 		if ($h->currentUser->loggedIn) {echo "<span id='loggedIn' class='loggedIn_true'/>"; } else {"<span id='loggedIn' class='loggedIn_false'/>";}
 	}
+        
+        
+        /**
+         * Creates a pull down menu in the nav bar for help with debugging
+         * @param type $h
+         */
+         public function debugNav($h)
+        {
+             $mysql_version = $h->db->get_var("SELECT VERSION() AS VE");
+			
+             $debug = array(
+                 $h->lang('main_hotaru_php_version') => phpversion(),
+                 $h->lang('main_hotaru_mysql_version') => $mysql_version,
+                 'Hotaru CMS: ' => $h->version,
+                 'DB driver: ' => isset($h->vars['debug']['db_driver']) ? $h->vars['debug']['db_driver'] : '',
+                  'divider'=>''                 
+              );
+             ?>
+
+                <li class="dropdown">
+                    <a href="#" class="dropdown-toggle" data-toggle="dropdown"><?php echo $h->lang("main_theme_navigation_debug"); ?> <b class="caret"></b></a>
+                    <ul class="dropdown-menu debug">
+                    <?php
+                        foreach ($debug as $item => $value) {                      
+                            if ($item == 'divider')
+                                echo  '<li class="divider"></li>'; 
+                            else
+                                if (is_array($value)) 
+                                    echo '<li><a href="' . $value[1] . '">' . $item . '<strong>' . $value[0] . '</strong></a></li>';
+                                else                                    
+                                    echo '<li><a href="#">' . $item . '<strong>' . $value . '</strong></a></li>';
+                        }
+                        // Make these separate as we are using javascript to fill them later
+                        
+                        echo '<li><a href="#">' . $h->lang('main_hotaru_db_queries') . '<strong><span id="debug_nav_db_queries"></span></strong></a></li>';
+                        echo '<li><a href="#">' . $h->lang('main_hotaru_memory_usage') . '<strong><span id="debug_nav_memory_usage"></span></strong></a></li>';
+                        //echo '<li><a href="#modal_hvars" data-toggle="modal">' . "h->vars: " . '<strong><span id="debug_nav_memory_usage"></span></strong></a></li>';
+                        echo '<li class="divider"></li>';
+                        echo '<li><a href="' . BASEURL . 'admin_index.php?page=maintenance&debug=error_log.php">' . "Error log" . '<strong></strong></a></li>';
+                        
+//                 $h->lang('main_hotaru_page_load_time') => timer_stop(2) . $h->lang('main_times_secs'),
+//                 $h->lang('main_hotaru_memory_usage') => display_filesize(memory_get_usage()),
+//                 '$h->vars: ' => array('(' . count($h->vars) . ') ' . display_filesize(strlen(serialize($h->vars))), $h->url(array('debug'=>'hvars' ,'admin'))),
+//                 'divider'=>'',                 
+//                 'Error log' => array('', BASEURL . 'admin_index.php?page=maintenance&debug=error_log.php')
+//                        
+//                  ?>          
+                    </ul>
+                  </li>                        
+            <?php 
+            
+        }
 	
 	
 	/**
@@ -122,23 +179,25 @@ class Debug
 	 *
 	 * @param string $type 'log', 'email' or 'object'
 	 */
-	public function generateReport($h, $type = 'log')
+	public function generateReport($h, $type = 'log', $level = '')
 	{
 		$sysinfo = new SystemInfo();
 
-		$report = $sysinfo->getSystemData($h);
+		$report = $sysinfo->getSystemData($h, $level);
 		
 		if ($type == 'object') { return $report; }
 		
-		if ($type == 'email') {
-			$to = "admin@hotarucms.org"; // do not change!
-			$subject = "System Report from " . SITE_NAME;
-			$body = $sysinfo->logSystemReport($h, $report);
-			$h->email($to, $subject, $body);
-			$h->message = $h->lang('admin_maintenance_system_report_emailed');
-			$h->messageType = 'green';
-			return true;
-		}
+                // TODO
+                // remove by 1.6.0
+//		if ($type == 'email') {
+//			$to = "admin@hotarucms.org"; // do not change!
+//			$subject = "System Report from " . SITE_NAME;
+//			$body = $sysinfo->logSystemReport($h, $report);
+//			$h->email($to, $subject, $body);
+//			$h->message = $h->lang('admin_maintenance_system_report_emailed');
+//			$h->messageType = 'green';
+//			return true;
+//		}
 		
 		$h->openLog('system_report', 'w');
 		
@@ -157,5 +216,55 @@ class Debug
 			return false;
 		}
 	}
+        
+        
+        /**
+         * dumps out the contents of $h->vars in a modal box
+         * used in context with the debug nav bar menu above
+         * @param type $h
+         */
+        function hvars($h)
+        {
+            ?> 
+            <div id="modal_hvars" class="modal hide fade" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" style="display: none;">
+            <div class="modal-header">
+              <button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+              <h3 id="myModalLabel">$h->vars</h3>
+            </div>
+            <div class="modal-body">
+              
+              
+              <?php         
+                         //print_r($h->vars);
+              foreach ($h->vars as $key => $value) {
+                  if (is_array($value)) {                      
+                      echo '<h4>' . $key . '</h4>';
+                      foreach ($value as $subKey => $subValue) {
+                          //echo '<p>' . $subKey . ' = '  . $subValue . '</p>';
+                          echo '<p>' . htmlentities($subKey) . ' = ';
+                          
+                          if (is_object($subValue) || is_array($subValue)) print_r($subValue); else print htmlentities($subValue);
+                          echo '</p>';
+                      }
+                      echo '<hr>';
+                  } else {                     
+                     echo '<p>';
+                     if (is_object($key)) print_r($key); else print htmlentities($key);                     
+                     print ' = ';
+                     if (is_object($value)) print_r($value); else print htmlentities($value);
+                     print '</p>';
+                     echo '<hr>';
+                  }
+                  
+              } ?>
+            </div>
+                
+            <div class="modal-footer">
+              <button class="btn" data-dismiss="modal">Close</button>
+            </div>
+          </div>
+                                                  
+            <?php
+        }
 }
 ?>

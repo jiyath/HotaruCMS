@@ -10,12 +10,8 @@
 			<div class="bar" style="width: 100%;"></div>
 		</div>
 	</div>
-
-        <?php 
-	//send feedback report
-	$systeminfo = new SystemInfo();
-	$systeminfo->hotaru_feedback($h);
-        ?>
+        
+        <?php $h->showMessages(); ?>
 
 	<div class='well'><?php echo $lang['upgrade_step3_instructions']; ?></div>
 	
@@ -25,6 +21,8 @@
         
 	<br/><?php echo $lang['upgrade_step3_go_play']; ?><br/><br/>
 
+        <div class="form-actions">
 	<!-- Previous/Next buttons -->
 	<a class="btn" href='index.php?step=2&action=upgrade'><?php echo $lang['install_back']; ?></a>
-	<a class="btn btn-success" href='<?php echo BASEURL; ?>index.php'><?php echo $lang['upgrade_home']; ?></a>
+	<a class="btn pull-right btn-success" href='<?php echo BASEURL; ?>index.php'><?php echo $lang['upgrade_home']; ?></a>
+        </div>

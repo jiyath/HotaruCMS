@@ -18,13 +18,13 @@
  * 
  * @category  Content Management System
  * @package   HotaruCMS
- * @author    Nick Ramsay <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @author    Hotaru CMS Team
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://www.hotarucms.org/
  */
  
-class Database extends ezSQL_mysql
+class Database extends ezSQL_mysqli
 {
 	protected $select   = array();
 	protected $table         = '';
@@ -119,7 +119,10 @@ class Database extends ezSQL_mysql
 		$select = ($this->select) ? $this->buildSelect() : '';
 		
 		// set TABLE:
-		$table = ($this->table) ? DB_PREFIX . $this->table : TABLE_POSTS; // defaults to TABLE_POSTS
+                if ($table == 'posts')
+                    $table = TABLE_POSTS . " AS P LEFT OUTER JOIN " . TABLE_USERS . " AS U ON P.post_author = U.user_id";
+		else 
+                    $table = ($this->table) ? DB_PREFIX . $this->table : TABLE_POSTS; // defaults to TABLE_POSTS
 		
 		// set WHERE
 		$where = ($this->where) ? $this->buildWhere() : '';
@@ -141,7 +144,7 @@ class Database extends ezSQL_mysql
 			$this->prepare_array[0] is "SELECT user_id FROM hotaru_users WHERE user_id = %d"
 			$this->prepare_array[1] is "5", where 5 fills the %d
 		*/
-		
+               
 		// get the data and return it
 		return $this->getData($h, $this->table);
 	}

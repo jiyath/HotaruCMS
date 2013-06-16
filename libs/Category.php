@@ -18,8 +18,8 @@
  * 
  * @category  Content Management System
  * @package   HotaruCMS
- * @author    Nick Ramsay <admin@hotarucms.org>
- * @copyright Copyright (c) 2010, Hotaru CMS
+ * @author    Hotaru CMS Team
+ * @copyright Copyright (c) 2009 - 2013, Hotaru CMS
  * @license   http://www.gnu.org/copyleft/gpl.html GNU General Public License
  * @link      http://www.hotarucms.org/
  */
@@ -35,7 +35,7 @@ class Category
 	public function getCatId($h, $cat_safe_name)
 	{
 		$sql = "SELECT category_id FROM " . TABLE_CATEGORIES . " WHERE category_safe_name = %s";
-		$cat_id = $h->db->get_var($h->db->prepare($sql, urlencode($cat_safe_name)));
+		$cat_id = $h->db->get_var($h->db->prepare($sql, $cat_safe_name));
 		return $cat_id;
 	}
 	
@@ -49,7 +49,7 @@ class Category
 	 */
 	public function getCatName($h, $cat_id = 0, $cat_safe_name = '')
 	{
-                if (!defined('PHP_VERSION_ID') || PHP_VERSION_ID < 50300 || !ACTIVERECORD) {
+                if (!ACTIVERECORD) {
                     if ($cat_id == 0 && $cat_safe_name != '') {
                             // Use safe name
                             $sql = "SELECT category_name FROM " . TABLE_CATEGORIES . " WHERE category_safe_name = %s";
@@ -60,20 +60,7 @@ class Category
                             $cat_name = $h->db->get_var($h->db->prepare($sql, $cat_id));
                     }
                 } else {
-                    if ($cat_id == 0 && $cat_safe_name != '') {
-                            // Use safe name
-                            $category = models___Categories::first(array( 
-                                'select' => 'category_name',
-                                'conditions' => array('category_safe_name = ?', urlencode($cat_safe_name))
-                              ));
-                    } else {
-                            // Use id
-                            $category = models___Categories::first(array( 
-                                'select' => 'category_name',
-                                'conditions' => array('category_id = ?', urlencode($cat_id))
-                              ));
-                    }
-                    $cat_name = isset($category->category_name) ? $category->category_name : null;
+                    
                 }
 		return urldecode($cat_name);
 	}
@@ -259,7 +246,7 @@ class Category
 
 		// return false if duplicate name
 		$sql = "SELECT category_name FROM " . TABLE_CATEGORIES . " WHERE category_name = %s";
-		$exists = $h->db->get_var($h->db->prepare($sql, urlencode($new_cat_name)));
+		$exists = $h->db->get_var($h->db->prepare($sql, $new_cat_name));
 		if ($exists) { return false; }
 
 		// increment category_order for all categories after the parent:
@@ -274,7 +261,7 @@ class Category
 		
 		//insert new category after parent category:
 		$sql = "INSERT INTO " . TABLE_CATEGORIES . " (category_parent, category_name, category_safe_name, category_order, category_updateby) VALUES (%d, %s, %s, %d, %d)";
-		$h->db->query($h->db->prepare($sql, $parent, urlencode($new_cat_name), urlencode(make_url_friendly($new_cat_name)), $position, $h->currentUser->id));
+		$h->db->query($h->db->prepare($sql, $parent, $new_cat_name, make_url_friendly($new_cat_name), $position, $h->currentUser->id));
 		
 		$this->rebuildTree($h, 1, 0);
 		
@@ -337,7 +324,7 @@ class Category
 		$sql = "DELETE FROM " . TABLE_CATEGORIES . " WHERE category_id = %d";
 		$h->db->query($h->db->prepare($sql, $delete_category));
 		return true;
-	}
+	} 
 
 }
 ?>
